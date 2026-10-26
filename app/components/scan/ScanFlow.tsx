@@ -257,7 +257,7 @@ export function ScanFlow() {
             </div>
 
             <Button
-              onClick={() => handleScanComplete(binNumber)}
+              onClick={() => void handleScanComplete(binNumber)}
               className="w-full mt-5 py-3.5 text-base shadow"
             >
               <History className="w-4 h-4" />

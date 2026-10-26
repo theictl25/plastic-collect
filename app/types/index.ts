@@ -12,7 +12,7 @@ export interface Bin {
 export type RewardCategory = 'food' | 'merch' | 'discount';
 
 export interface Reward {
-  id: number;
+  id: string;
   n: string;
   cat: RewardCategory;
   p: number; // required points

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import type {
   AppMode,
   TabType,
@@ -6,8 +6,12 @@ import type {
   TranslationStrings,
   HistoryItem,
   Reward,
+  Bin,
 } from '../types';
 import { TRANSLATIONS } from '../data/translations';
+import { BINS } from '../data/bins';
+import { REWARDS } from '../data/rewards';
+import { loadAppData, recordRecycling, redeemReward } from '../lib/green-point.client';
 
 interface AppContextType {
   mode: AppMode;
@@ -18,14 +22,16 @@ interface AppContextType {
   setLang: (lang: Language) => void;
   t: TranslationStrings;
   points: number;
-  setPoints: React.Dispatch<React.SetStateAction<number>>;
   history: HistoryItem[];
+  bins: Bin[];
+  rewards: Reward[];
+  isLoadingData: boolean;
   isScanning: boolean;
   scanBinId: string;
   startScan: (binId?: string) => void;
   cancelScan: () => void;
-  handleScanComplete: (binId: string) => void;
-  handleRedeem: (reward: Reward) => boolean;
+  handleScanComplete: (binId: string) => Promise<boolean>;
+  handleRedeem: (reward: Reward) => Promise<boolean>;
   toast: string;
   showToast: (message: string) => void;
 }
@@ -36,15 +42,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<AppMode>('user');
   const [tab, setTabState] = useState<TabType>('home');
   const [lang, setLang] = useState<Language>('th');
-  const [points, setPoints] = useState<number>(320);
+  const [points, setPoints] = useState<number>(0);
+  const [bins, setBins] = useState<Bin[]>(BINS);
+  const [rewards, setRewards] = useState<Reward[]>(REWARDS);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanBinId, setScanBinId] = useState<string>('BIN-003');
   const [toast, setToast] = useState<string>('');
 
-  const [history, setHistory] = useState<HistoryItem[]>([
-    { t: 'BIN-003 · Plastic', when: '22 Oct 2026 10:24', d: 10 },
-    { t: 'Lunch Set & Drink', when: '20 Oct 2026 12:30', d: -50 },
-  ]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -53,6 +59,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 2500);
     return () => clearTimeout(timer);
   }, []);
+
+  const refreshAppData = useCallback(async () => {
+    setIsLoadingData(true);
+    try {
+      const data = await loadAppData();
+      setBins(data.bins);
+      setRewards(data.rewards);
+      setHistory(data.history);
+      setPoints(data.points);
+    } catch (error) {
+      console.error('Supabase data load failed:', error);
+      showToast(lang === 'th' ? 'ไม่สามารถดึงข้อมูลจาก Supabase ได้' : 'Unable to load data from Supabase');
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [lang, showToast]);
+
+  useEffect(() => {
+    void refreshAppData();
+  }, [refreshAppData]);
 
   const setTab = useCallback((newTab: TabType) => {
     setIsScanning(false);
@@ -71,59 +97,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleScanComplete = useCallback(
-    (binId: string) => {
-      setPoints((prev) => prev + 10);
-      setHistory((prev) => [
-        {
-          t: `${binId} · Plastic`,
-          when: new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-          d: 10,
-          new: 1,
-        },
-        ...prev,
-      ]);
-      setIsScanning(false);
-      setTabState('history');
-      showToast(lang === 'th' ? 'ได้รับ +10 แต้มสะสมแล้ว!' : '+10 points earned!');
+    async (binId: string) => {
+      try {
+        const result = await recordRecycling(binId);
+        await refreshAppData();
+        setIsScanning(false);
+        setTabState('history');
+        showToast(lang === 'th' ? `ได้รับ +${result.points_awarded} แต้มสะสมแล้ว!` : `+${result.points_awarded} points earned!`);
+        return true;
+      } catch (error) {
+        console.error('Supabase recycling save failed:', error);
+        showToast(lang === 'th' ? 'บันทึกการทิ้งขยะไม่สำเร็จ' : 'Unable to save recycling activity');
+        return false;
+      }
     },
-    [lang, showToast]
+    [lang, refreshAppData, showToast]
   );
 
   const handleRedeem = useCallback(
-    (reward: Reward): boolean => {
+    async (reward: Reward): Promise<boolean> => {
       if (points < reward.p) {
         showToast(lang === 'th' ? 'แต้มสะสมของคุณไม่เพียงพอ' : 'Not enough points');
         return false;
       }
-      setPoints((prev) => prev - reward.p);
-      setHistory((prev) => [
-        {
-          t: reward.n,
-          when: new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-          d: -reward.p,
-        },
-        ...prev,
-      ]);
-      showToast(
-        lang === 'th'
-          ? `แลกรางวัลสำเร็จ: ${reward.n}`
-          : `Redeemed: ${reward.n}`
-      );
-      return true;
+      try {
+        const result = await redeemReward(reward.id);
+        await refreshAppData();
+        showToast(lang === 'th' ? `แลกรางวัลสำเร็จ: ${reward.n} (${result.redemption_code})` : `Redeemed: ${reward.n} (${result.redemption_code})`);
+        return true;
+      } catch (error) {
+        console.error('Supabase reward redemption failed:', error);
+        showToast(lang === 'th' ? 'แลกรางวัลไม่สำเร็จ' : 'Unable to redeem reward');
+        return false;
+      }
     },
-    [points, lang, showToast]
+    [points, lang, refreshAppData, showToast]
   );
 
   const t = useMemo(() => TRANSLATIONS[lang], [lang]);
@@ -137,8 +145,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setLang,
     t,
     points,
-    setPoints,
     history,
+    bins,
+    rewards,
+    isLoadingData,
     isScanning,
     scanBinId,
     startScan,

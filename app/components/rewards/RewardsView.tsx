@@ -2,11 +2,10 @@ import { useState, useMemo } from 'react';
 import { Star, History } from 'lucide-react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
-import { REWARDS } from '../../data/rewards';
 import { useApp } from '../../context/AppContext';
 
 export function RewardsView() {
-  const { t, points, handleRedeem, setTab } = useApp();
+  const { t, points, rewards, handleRedeem, setTab } = useApp();
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
   const categories = [
@@ -17,7 +16,7 @@ export function RewardsView() {
   ];
 
   const filteredRewards = useMemo(() => {
-    return REWARDS.filter(
+    return rewards.filter(
       (r) => activeCategory === 'all' || r.cat === activeCategory
     );
   }, [activeCategory]);
@@ -99,7 +98,7 @@ export function RewardsView() {
 
                   <Button
                     disabled={!canRedeem}
-                    onClick={() => handleRedeem(reward)}
+                    onClick={() => void handleRedeem(reward)}
                     className="text-xs px-3 py-1.5 shadow-none"
                   >
                     {t.redeem}

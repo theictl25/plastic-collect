@@ -1,6 +1,7 @@
 import type { Route } from './+types/home';
 import { AppProvider } from '../context/AppContext';
 import { MainApp } from '../components/MainApp';
+import { AuthGate } from '../components/auth/AuthGate';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -15,8 +16,6 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   return (
-    <AppProvider>
-      <MainApp />
-    </AppProvider>
+    <AuthGate><AppProvider><MainApp /></AppProvider></AuthGate>
   );
 }

@@ -1,26 +1,30 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MapPin, Locate, Search, Trash2, X, Plus, Minus } from "lucide-react";
 import { Button } from "../common/Button";
-import { BINS, WASTE_TYPE_COLORS } from "../../data/bins";
+import { WASTE_TYPE_COLORS } from "../../data/bins";
 import { useApp } from "../../context/AppContext";
 import type { Bin, WasteType } from "../../types";
 
 export function MapView() {
-  const { t, startScan } = useApp();
+  const { t, startScan, bins } = useApp();
   const [filterType, setFilterType] = useState<string>("all");
-  const [selectedBin, setSelectedBin] = useState<Bin | null>(BINS[2]); // default BIN-003
+  const [selectedBin, setSelectedBin] = useState<Bin | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [zoomLevel, setZoomLevel] = useState<number>(1);
 
   const filteredBins = useMemo(() => {
-    return BINS.filter((b) => {
+    return bins.filter((b) => {
       const matchesType = filterType === "all" || b.t === filterType;
       const matchesQuery = b.id
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
       return matchesType && matchesQuery;
     });
-  }, [filterType, searchQuery]);
+  }, [bins, filterType, searchQuery]);
+
+  useEffect(() => {
+    if (!selectedBin && bins.length) setSelectedBin(bins[0]);
+  }, [bins, selectedBin]);
 
   const categories: Array<{ id: string; label: string }> = [
     { id: "all", label: t.all },
