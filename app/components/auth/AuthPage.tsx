@@ -70,7 +70,11 @@ export function AuthPage({ mode }: AuthPageProps) {
       options: { redirectTo: window.location.origin },
     });
     if (oauthError) {
-      setError(oauthError.message);
+      setError(
+        oauthError.message.includes('provider is not enabled')
+          ? 'ยังไม่ได้เปิดใช้งาน Google Sign-In ใน Supabase โปรดตั้งค่า Google provider ก่อน'
+          : oauthError.message
+      );
       setIsSubmitting(false);
     }
   }

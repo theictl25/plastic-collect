@@ -4,6 +4,7 @@ import { HomeView } from './home/HomeView';
 import { MapView } from './map/MapView';
 import { RewardsView } from './rewards/RewardsView';
 import { HistoryView } from './history/HistoryView';
+import { ProfileView } from './profile/ProfileView';
 import { ScanFlow } from './scan/ScanFlow';
 import { AdminDashboard } from './admin/AdminDashboard';
 import { Toast } from './common/Toast';
@@ -36,8 +37,10 @@ export function MainApp() {
           <MapView />
         ) : tab === 'rewards' ? (
           <RewardsView />
-        ) : (
+        ) : tab === 'history' ? (
           <HistoryView />
+        ) : (
+          <ProfileView />
         )}
       </main>
 

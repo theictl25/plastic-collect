@@ -1,10 +1,10 @@
-import { ShieldCheck, Star } from 'lucide-react';
+import { ShieldCheck, Star, UserRound } from 'lucide-react';
 import { Logo } from '../common/Logo';
 import { useApp } from '../../context/AppContext';
 import type { TabType, Language } from '../../types';
 
 export function Header() {
-  const { tab, setTab, lang, setLang, points, setMode, t } = useApp();
+  const { tab, setTab, lang, setLang, points, profile, setMode, t } = useApp();
   const tabs: TabType[] = ['home', 'map', 'rewards', 'history'];
 
   return (
@@ -61,12 +61,12 @@ export function Header() {
           </button>
 
           {/* User Profile Badge */}
-          <div className="flex items-center gap-2 pl-2 border-l border-gray-100">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gp-m to-gp text-white flex items-center justify-center font-bold text-sm shadow-xs">
-              S
+          <button onClick={() => setTab('profile')} className="flex items-center gap-2 pl-2 border-l border-gray-100 rounded-lg hover:bg-gray-50 transition cursor-pointer" title="View profile">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gp-m to-gp text-white flex items-center justify-center font-bold text-sm shadow-xs overflow-hidden">
+              {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" /> : profile?.displayName?.slice(0, 1).toUpperCase() || <UserRound className="w-4 h-4" />}
             </div>
             <div className="hidden sm:block leading-tight text-left">
-              <div className="text-xs font-semibold text-gray-900">Somsak</div>
+              <div className="text-xs font-semibold text-gray-900 max-w-28 truncate">{profile?.displayName || 'Loading...'}</div>
               <div className="text-[11px] text-gp font-bold flex items-center gap-1">
                 <Star className="w-3 h-3 fill-gp text-gp" />
                 <span>
@@ -74,7 +74,7 @@ export function Header() {
                 </span>
               </div>
             </div>
-          </div>
+          </button>
         </div>
       </div>
 

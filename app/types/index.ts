@@ -29,7 +29,16 @@ export interface HistoryItem {
 
 export type Language = 'th' | 'en';
 
-export type TabType = 'home' | 'map' | 'rewards' | 'history';
+export type TabType = 'home' | 'map' | 'rewards' | 'history' | 'profile';
+
+export interface UserProfile {
+  id: string;
+  displayName: string;
+  email: string;
+  phone: string | null;
+  avatarUrl: string | null;
+  joinedAt: string | null;
+}
 
 export type AppMode = 'user' | 'admin';
 

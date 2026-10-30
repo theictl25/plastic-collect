@@ -7,11 +7,12 @@ import type {
   HistoryItem,
   Reward,
   Bin,
+  UserProfile,
 } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 import { BINS } from '../data/bins';
 import { REWARDS } from '../data/rewards';
-import { loadAppData, recordRecycling, redeemReward } from '../lib/green-point.client';
+import { loadAppData, recordRecycling, redeemReward, updateMyProfile } from '../lib/green-point.client';
 
 interface AppContextType {
   mode: AppMode;
@@ -22,6 +23,7 @@ interface AppContextType {
   setLang: (lang: Language) => void;
   t: TranslationStrings;
   points: number;
+  profile: UserProfile | null;
   history: HistoryItem[];
   bins: Bin[];
   rewards: Reward[];
@@ -32,6 +34,7 @@ interface AppContextType {
   cancelScan: () => void;
   handleScanComplete: (binId: string) => Promise<boolean>;
   handleRedeem: (reward: Reward) => Promise<boolean>;
+  saveProfile: (input: { displayName: string; phone: string; avatarUrl: string }) => Promise<boolean>;
   toast: string;
   showToast: (message: string) => void;
 }
@@ -43,6 +46,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [tab, setTabState] = useState<TabType>('home');
   const [lang, setLang] = useState<Language>('th');
   const [points, setPoints] = useState<number>(0);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bins, setBins] = useState<Bin[]>(BINS);
   const [rewards, setRewards] = useState<Reward[]>(REWARDS);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -68,6 +72,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setRewards(data.rewards);
       setHistory(data.history);
       setPoints(data.points);
+      setProfile(data.profile);
     } catch (error) {
       console.error('Supabase data load failed:', error);
       showToast(lang === 'th' ? 'ไม่สามารถดึงข้อมูลจาก Supabase ได้' : 'Unable to load data from Supabase');
@@ -134,6 +139,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [points, lang, refreshAppData, showToast]
   );
 
+  const saveProfile = useCallback(async (input: { displayName: string; phone: string; avatarUrl: string }) => {
+    if (!input.displayName.trim()) {
+      showToast(lang === 'th' ? 'กรุณาระบุชื่อที่ต้องการแสดง' : 'Display name is required');
+      return false;
+    }
+    try {
+      await updateMyProfile(input);
+      await refreshAppData();
+      showToast(lang === 'th' ? 'บันทึกข้อมูลโปรไฟล์แล้ว' : 'Profile updated');
+      return true;
+    } catch (error) {
+      console.error('Supabase profile update failed:', error);
+      showToast(lang === 'th' ? 'บันทึกโปรไฟล์ไม่สำเร็จ' : 'Unable to update profile');
+      return false;
+    }
+  }, [lang, refreshAppData, showToast]);
+
   const t = useMemo(() => TRANSLATIONS[lang], [lang]);
 
   const value = {
@@ -145,6 +167,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setLang,
     t,
     points,
+    profile,
     history,
     bins,
     rewards,
@@ -155,6 +178,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     cancelScan,
     handleScanComplete,
     handleRedeem,
+    saveProfile,
     toast,
     showToast,
   };
