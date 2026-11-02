@@ -44,7 +44,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<AppMode>('user');
   const [tab, setTabState] = useState<TabType>('home');
-  const [lang, setLang] = useState<Language>('th');
+  const [lang, setLang] = useState<Language>('lo');
   const [points, setPoints] = useState<number>(0);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bins, setBins] = useState<Bin[]>(BINS);
@@ -75,7 +75,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setProfile(data.profile);
     } catch (error) {
       console.error('Supabase data load failed:', error);
-      showToast(lang === 'th' ? 'ไม่สามารถดึงข้อมูลจาก Supabase ได้' : 'Unable to load data from Supabase');
+      showToast(lang === 'lo' ? 'ບໍ່ສາມາດໂຫຼດຂໍ້ມູນຈາກ Supabase ໄດ້' : 'Unable to load data from Supabase');
     } finally {
       setIsLoadingData(false);
     }
@@ -108,11 +108,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         await refreshAppData();
         setIsScanning(false);
         setTabState('history');
-        showToast(lang === 'th' ? `ได้รับ +${result.points_awarded} แต้มสะสมแล้ว!` : `+${result.points_awarded} points earned!`);
+        showToast(lang === 'lo' ? `ໄດ້ຮັບ +${result.points_awarded} ຄະແນນແລ້ວ!` : `+${result.points_awarded} points earned!`);
         return true;
       } catch (error) {
         console.error('Supabase recycling save failed:', error);
-        showToast(lang === 'th' ? 'บันทึกการทิ้งขยะไม่สำเร็จ' : 'Unable to save recycling activity');
+        showToast(lang === 'lo' ? 'ບັນທຶກການຮີໄຊເຄິນບໍ່ສຳເລັດ' : 'Unable to save recycling activity');
         return false;
       }
     },
@@ -122,17 +122,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const handleRedeem = useCallback(
     async (reward: Reward): Promise<boolean> => {
       if (points < reward.p) {
-        showToast(lang === 'th' ? 'แต้มสะสมของคุณไม่เพียงพอ' : 'Not enough points');
+        showToast(lang === 'lo' ? 'ຄະແນນຂອງທ່ານບໍ່ພຽງພໍ' : 'Not enough points');
         return false;
       }
       try {
         const result = await redeemReward(reward.id);
         await refreshAppData();
-        showToast(lang === 'th' ? `แลกรางวัลสำเร็จ: ${reward.n} (${result.redemption_code})` : `Redeemed: ${reward.n} (${result.redemption_code})`);
+        showToast(lang === 'lo' ? `ແລກລາງວັນສຳເລັດ: ${reward.n} (${result.redemption_code})` : `Redeemed: ${reward.n} (${result.redemption_code})`);
         return true;
       } catch (error) {
         console.error('Supabase reward redemption failed:', error);
-        showToast(lang === 'th' ? 'แลกรางวัลไม่สำเร็จ' : 'Unable to redeem reward');
+        showToast(lang === 'lo' ? 'ແລກລາງວັນບໍ່ສຳເລັດ' : 'Unable to redeem reward');
         return false;
       }
     },
@@ -141,17 +141,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const saveProfile = useCallback(async (input: { displayName: string; phone: string; avatarUrl: string }) => {
     if (!input.displayName.trim()) {
-      showToast(lang === 'th' ? 'กรุณาระบุชื่อที่ต้องการแสดง' : 'Display name is required');
+      showToast(lang === 'lo' ? 'ກະລຸນາລະບຸຊື່ສະແດງ' : 'Display name is required');
       return false;
     }
     try {
       await updateMyProfile(input);
       await refreshAppData();
-      showToast(lang === 'th' ? 'บันทึกข้อมูลโปรไฟล์แล้ว' : 'Profile updated');
+      showToast(lang === 'lo' ? 'ບັນທຶກໂປຣໄຟລແລ້ວ' : 'Profile updated');
       return true;
     } catch (error) {
       console.error('Supabase profile update failed:', error);
-      showToast(lang === 'th' ? 'บันทึกโปรไฟล์ไม่สำเร็จ' : 'Unable to update profile');
+      showToast(lang === 'lo' ? 'ບັນທຶກໂປຣໄຟລບໍ່ສຳເລັດ' : 'Unable to update profile');
       return false;
     }
   }, [lang, refreshAppData, showToast]);

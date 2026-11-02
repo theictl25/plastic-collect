@@ -1,39 +1,45 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
-import { ArrowRight, CheckCircle2, Eye, EyeOff, Leaf, LockKeyhole, Mail, Recycle, Sparkles } from 'lucide-react';
-import { supabase } from '../../lib/supabase.client';
-
-type AuthMode = 'login' | 'register';
+import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router";
+import { supabase } from "../../lib/supabase.client";
+import { isCurrentUserAdmin } from "../../lib/admin.client";
+import { AdminLoginModal } from "./AdminLoginModal";
+import { Eye, EyeOff, Recycle } from "lucide-react";
 
 interface AuthPageProps {
-  mode: AuthMode;
+  mode: "login" | "register";
 }
 
 export function AuthPage({ mode }: AuthPageProps) {
   const navigate = useNavigate();
-  const isRegister = mode === 'register';
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const isRegister = mode === "register";
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
+  // Redirect authenticated users away from the authentication screen.
   useEffect(() => {
     let mounted = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (mounted && data.session?.user && !data.session.user.is_anonymous) navigate('/', { replace: true });
+    void supabase.auth.getSession().then(async ({ data }) => {
+      if (!mounted || !data.session?.user || data.session.user.is_anonymous)
+        return;
+      const allowed = await isCurrentUserAdmin();
+      navigate(allowed ? "/admin" : "/", { replace: true });
     });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError('');
-    setMessage('');
+    setError("");
+    setMessage("");
     setIsSubmitting(true);
-
     try {
       if (isRegister) {
         const { data, error: signUpError } = await supabase.auth.signUp({
@@ -45,90 +51,138 @@ export function AuthPage({ mode }: AuthPageProps) {
           },
         });
         if (signUpError) throw signUpError;
-        if (data.session) {
-          navigate('/', { replace: true });
-        } else {
-          setMessage('สร้างบัญชีแล้ว กรุณาตรวจสอบอีเมลเพื่อยืนยันก่อนเข้าสู่ระบบ');
-        }
+        if (data.session) navigate("/", { replace: true });
+        else
+          setMessage(
+            "ສ້າງບັນຊີແລ້ວ. ກະລຸນາກວດອີເມວເພື່ອຢືນຢັນກ່ອນເຂົ້າລະບົບ",
+          );
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
         if (signInError) throw signInError;
-        navigate('/', { replace: true });
+        navigate("/", { replace: true });
       }
-    } catch (authError) {
-      setError(authError instanceof Error ? authError.message : 'ไม่สามารถดำเนินการได้ โปรดลองใหม่');
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "ບໍ່ສາມາດດຳເນີນການໄດ້. ກະລຸນາລອງໃໝ່",
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  async function signInWithGoogle() {
-    setError('');
-    setIsSubmitting(true);
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    });
-    if (oauthError) {
-      setError(
-        oauthError.message.includes('provider is not enabled')
-          ? 'ยังไม่ได้เปิดใช้งาน Google Sign-In ใน Supabase โปรดตั้งค่า Google provider ก่อน'
-          : oauthError.message
-      );
-      setIsSubmitting(false);
-    }
-  }
-
   return (
-    <main className="min-h-screen bg-[#f6faf7] p-4 sm:p-7 lg:p-10 flex items-center justify-center">
-      <section className="w-full max-w-6xl min-h-[650px] bg-white rounded-[2rem] shadow-2xl shadow-emerald-950/10 overflow-hidden grid lg:grid-cols-[1.05fr_.95fr] border border-emerald-100">
-        <aside className="relative overflow-hidden bg-[#0c3826] px-7 py-8 sm:p-12 text-white flex flex-col">
-          <div className="absolute -top-32 -right-24 w-72 h-72 rounded-full bg-emerald-400/20" />
-          <div className="absolute -bottom-36 -left-20 w-80 h-80 rounded-full border-[32px] border-emerald-300/10" />
-          <div className="relative flex items-center gap-3">
-            <span className="w-11 h-11 rounded-2xl bg-white text-gp grid place-items-center shadow-lg"><Recycle className="w-6 h-6" /></span>
-            <div><div className="font-bold text-xl tracking-tight">Green Point</div><div className="text-xs text-emerald-100/70">Recycle for a Better Tomorrow</div></div>
-          </div>
-
-          <div className="relative my-auto py-12 max-w-md">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-emerald-100">
-              <Sparkles className="w-3.5 h-3.5" /> Your sustainable journey starts here
-            </div>
-            <h1 className="mt-6 text-4xl sm:text-5xl font-bold leading-[1.08] tracking-tight">Recycle today.<br /><span className="text-emerald-300">Earn tomorrow.</span></h1>
-            <p className="mt-5 text-emerald-50/75 leading-relaxed">Every bottle you recycle becomes points, rewards, and a cleaner community.</p>
-            <div className="mt-9 grid grid-cols-3 gap-3">
-              {[['12.5 kg', 'recycled'], ['320', 'points earned'], ['8×', 'green visits']].map(([value, label]) => <div key={label} className="rounded-2xl bg-white/10 border border-white/10 p-3"><div className="font-bold text-lg">{value}</div><div className="mt-0.5 text-[10px] text-emerald-100/65">{label}</div></div>)}
-            </div>
-          </div>
-
-          <div className="relative flex items-center gap-2 text-xs text-emerald-100/70"><Leaf className="w-4 h-4 text-emerald-300" /> One small habit. A real difference.</div>
-        </aside>
-
-        <div className="px-6 py-9 sm:px-12 sm:py-12 flex flex-col justify-center">
-          <div className="max-w-md w-full mx-auto">
-            <p className="text-sm font-semibold text-gp">WELCOME TO GREEN POINT</p>
-            <h2 className="mt-2 text-3xl font-bold text-gray-900 tracking-tight">{isRegister ? 'Create your account' : 'Welcome back'}</h2>
-            <p className="mt-2 text-sm text-gp-gray">{isRegister ? 'Start turning good habits into meaningful rewards.' : 'Sign in to continue your recycling journey.'}</p>
-
-            <button type="button" onClick={() => void signInWithGoogle()} disabled={isSubmitting} className="mt-7 w-full h-12 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-semibold text-gray-700 inline-flex items-center justify-center gap-3 transition disabled:opacity-50 cursor-pointer">
-              <span className="font-bold text-[19px] leading-none text-[#4285F4]">G</span> Continue with Google
-            </button>
-            <div className="my-6 flex items-center gap-3 text-xs text-gp-gray"><span className="h-px flex-1 bg-gray-100" />or continue with email<span className="h-px flex-1 bg-gray-100" /></div>
-
-            <form onSubmit={submit} className="space-y-4">
-              {isRegister && <label className="block"><span className="mb-1.5 block text-sm font-semibold text-gray-700">Your name</span><div className="relative"><input required value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Noy Phommasone" className="w-full h-12 rounded-xl border border-gray-200 px-4 outline-none focus:border-gp focus:ring-4 focus:ring-gp/10 text-sm" /></div></label>}
-              <label className="block"><span className="mb-1.5 block text-sm font-semibold text-gray-700">Email address</span><div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gp-gray" /><input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="w-full h-12 rounded-xl border border-gray-200 pl-11 pr-4 outline-none focus:border-gp focus:ring-4 focus:ring-gp/10 text-sm" /></div></label>
-              <label className="block"><span className="mb-1.5 block text-sm font-semibold text-gray-700">Password</span><div className="relative"><LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gp-gray" /><input required minLength={6} type={showPassword ? 'text' : 'password'} autoComplete={isRegister ? 'new-password' : 'current-password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 6 characters" className="w-full h-12 rounded-xl border border-gray-200 pl-11 pr-11 outline-none focus:border-gp focus:ring-4 focus:ring-gp/10 text-sm" /><button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gp-gray hover:text-gp cursor-pointer" aria-label="Toggle password visibility">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></label>
-
-              {error && <p role="alert" className="rounded-xl bg-red-50 px-3.5 py-3 text-sm text-red-700">{error}</p>}
-              {message && <p className="rounded-xl bg-emerald-50 px-3.5 py-3 text-sm text-gp flex gap-2"><CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />{message}</p>}
-              <button disabled={isSubmitting} type="submit" className="w-full h-12 rounded-xl bg-gp hover:bg-gp-d text-white font-semibold text-sm shadow-lg shadow-emerald-800/20 transition disabled:opacity-50 cursor-pointer inline-flex items-center justify-center gap-2">{isSubmitting ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'} <ArrowRight className="w-4 h-4" /></button>
-            </form>
-
-            <p className="mt-7 text-center text-sm text-gp-gray">{isRegister ? 'Already have an account?' : 'New to Green Point?'} <button type="button" onClick={() => navigate(isRegister ? '/login' : '/register')} className="font-bold text-gp hover:underline cursor-pointer">{isRegister ? 'Sign in' : 'Create an account'}</button></p>
-          </div>
+    <main className="min-h-screen bg-[#f6faf7] p-4 flex items-center justify-center">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center text-center">
+          <span className="w-12 h-12 rounded-2xl bg-gp text-white grid place-items-center shadow-lg">
+            <Recycle className="w-6 h-6" />
+          </span>
+          <h1 className="mt-4 text-2xl font-bold text-gray-900">Green Point</h1>
+          <p className="mt-1 text-sm text-gp-gray">
+            {isRegister ? "ສ້າງບັນຊີໃໝ່" : "ເຂົ້າລະບົບເພື່ອເລີ່ມສະສົມຄະແນນ"}
+          </p>
         </div>
-      </section>
+
+        <form
+          onSubmit={submit}
+          className="mt-7 space-y-3 rounded-2xl bg-white p-6 shadow-xl shadow-emerald-950/5 border border-emerald-100"
+        >
+          {isRegister && (
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="ຊື່ຂອງທ່ານ"
+              className="w-full h-11 rounded-xl border border-gray-200 px-4 text-sm outline-none focus:border-gp focus:ring-4 focus:ring-gp/10"
+            />
+          )}
+          <input
+            required
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            className="w-full h-11 rounded-xl border border-gray-200 px-4 text-sm outline-none focus:border-gp focus:ring-4 focus:ring-gp/10"
+          />
+          <div className="relative">
+            <input
+              required
+              minLength={6}
+              type={showPassword ? "text" : "password"}
+              autoComplete={isRegister ? "new-password" : "current-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full h-11 rounded-xl border border-gray-200 pl-4 pr-11 text-sm outline-none focus:border-gp focus:ring-4 focus:ring-gp/10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gp-gray hover:text-gp cursor-pointer"
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+
+          {error && (
+            <p
+              role="alert"
+              className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
+            >
+              {error}
+            </p>
+          )}
+          {message && (
+            <p className="rounded-xl bg-emerald-50 px-3.5 py-2.5 text-sm text-gp">
+              {message}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-11 rounded-xl bg-gp hover:bg-gp-d text-white text-sm font-semibold transition disabled:opacity-50 cursor-pointer"
+          >
+            {isSubmitting
+              ? "Please wait…"
+              : isRegister
+                ? "Create account"
+                : "Sign in"}
+          </button>
+        </form>
+
+        <p className="mt-5 text-center text-sm text-gp-gray">
+          {isRegister ? "ມີບັນຊີແລ້ວ?" : "ຍັງບໍ່ມີບັນຊີ?"}{" "}
+          <button
+            type="button"
+            onClick={() => navigate(isRegister ? "/login" : "/register")}
+            className="font-bold text-gp hover:underline cursor-pointer"
+          >
+            {isRegister ? "Sign in" : "Create an account"}
+          </button>
+        </p>
+
+        <div className="mt-8 text-center">
+          <button
+            type="button"
+            onClick={() => setAdminOpen(true)}
+            className="text-xs text-gray-400 hover:text-gp cursor-pointer"
+          >
+            Admin login
+          </button>
+        </div>
+      </div>
+
+      <AdminLoginModal open={adminOpen} onClose={() => setAdminOpen(false)} />
     </main>
   );
 }

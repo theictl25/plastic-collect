@@ -27,7 +27,8 @@ export interface HistoryItem {
   new?: number | boolean;
 }
 
-export type Language = 'th' | 'en';
+// The application supports Lao and English only.
+export type Language = 'lo' | 'en';
 
 export type TabType = 'home' | 'map' | 'rewards' | 'history' | 'profile';
 

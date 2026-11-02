@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import {
   LayoutDashboard,
   Users,
@@ -23,7 +24,8 @@ import { AdminReports } from './AdminReports';
 import { AdminSettings } from './AdminSettings';
 
 export function AdminDashboard() {
-  const { setMode, t } = useApp();
+  const { t } = useApp();
+  const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState<AdminNavType>('Dashboard');
 
   const navItems: Array<{
@@ -50,7 +52,7 @@ export function AdminDashboard() {
           <div className="p-4 flex items-center justify-between md:block border-b border-white/10 md:border-b-0">
             <Logo sub="Admin Portal" />
             <button
-              onClick={() => setMode('user')}
+              onClick={() => navigate('/')}
               className="md:hidden text-xs bg-white/10 hover:bg-white/20 rounded-lg px-3 py-1.5 transition cursor-pointer"
             >
               {t.userView}
@@ -113,7 +115,7 @@ export function AdminDashboard() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setMode('user')}
+              onClick={() => navigate('/')}
               className="hidden md:block text-xs font-semibold text-gp border border-gp rounded-lg px-3 py-1.5 hover:bg-gp-l transition cursor-pointer"
             >
               {t.userView}

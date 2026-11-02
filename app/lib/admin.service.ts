@@ -390,7 +390,7 @@ export async function fetchAdminRewards(): Promise<{ data: DbRewardItem[]; isLiv
       {
         id: 'rw-1',
         nameEn: 'Lunch Set',
-        nameTh: 'ชุดอาหารกลางวัน',
+        nameTh: 'ຊຸດອາຫານທ່ຽງ',
         category: 'food',
         pointsCost: 50,
         emoji: '🍱',
@@ -402,7 +402,7 @@ export async function fetchAdminRewards(): Promise<{ data: DbRewardItem[]; isLiv
       {
         id: 'rw-2',
         nameEn: 'Fresh Fruit Drink',
-        nameTh: 'เครื่องดื่มน้ำผลไม้',
+        nameTh: 'ເຄື່ອງດື່ມນ້ຳໝາກໄມ້',
         category: 'food',
         pointsCost: 30,
         emoji: '🥤',
@@ -414,7 +414,7 @@ export async function fetchAdminRewards(): Promise<{ data: DbRewardItem[]; isLiv
       {
         id: 'rw-3',
         nameEn: 'Green Point Eco Tote Bag',
-        nameTh: 'กระเป๋าผ้ารักษ์โลก',
+        nameTh: 'ກະເປົາຜ້າຮັກສາສິ່ງແວດລ້ອມ',
         category: 'merch',
         pointsCost: 100,
         emoji: '👜',
@@ -711,10 +711,10 @@ export async function fetchWasteTypesFromSupabase(): Promise<{ data: DbWasteType
   return {
     isLive: false,
     data: [
-      { id: 1, code: 'plastic', nameTh: 'พลาสติก', nameEn: 'Plastic', pointsPerKg: 10 },
-      { id: 2, code: 'paper', nameTh: 'กระดาษ', nameEn: 'Paper', pointsPerKg: 8 },
-      { id: 3, code: 'metal', nameTh: 'โลหะ', nameEn: 'Metal', pointsPerKg: 12 },
-      { id: 4, code: 'other', nameTh: 'อื่น ๆ', nameEn: 'Other', pointsPerKg: 5 },
+      { id: 1, code: 'plastic', nameTh: 'ພລາສຕິກ', nameEn: 'Plastic', pointsPerKg: 10 },
+      { id: 2, code: 'paper', nameTh: 'ເຈ້ຍ', nameEn: 'Paper', pointsPerKg: 8 },
+      { id: 3, code: 'metal', nameTh: 'ໂລຫະ', nameEn: 'Metal', pointsPerKg: 12 },
+      { id: 4, code: 'other', nameTh: 'ອື່ນໆ', nameEn: 'Other', pointsPerKg: 5 },
     ],
   };
 }
@@ -728,5 +728,48 @@ export async function updateWasteTypePointsInSupabase(code: string, points: numb
     return !error;
   } catch {
     return false;
+  }
+}
+
+
+export interface ServiceResult {
+  ok: boolean;
+  error?: string;
+}
+
+export async function updateBinInSupabase(
+  binCode: string,
+  payload: { name: string; capacity_kg: number; address: string }
+): Promise<ServiceResult> {
+  try {
+    const { error } = await supabase
+      .from('bins')
+      .update(payload)
+      .eq('bin_code', binCode);
+
+    if (error) {
+      console.error('updateBinInSupabase error:', error);
+      return { ok: false, error: error.message };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+export async function deleteBinInSupabase(binCode: string): Promise<ServiceResult> {
+  try {
+    const { error } = await supabase
+      .from('bins')
+      .delete()
+      .eq('bin_code', binCode);
+
+    if (error) {
+      console.error('deleteBinInSupabase error:', error);
+      return { ok: false, error: error.message };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Noto Sans Thai", "Noto Sans Lao", system-ui, sans-serif;
+  --font-sans: "Inter", "Noto Sans Lao", system-ui, sans-serif;
   --color-gp: #0A7B4F;
   --color-gp-d: #15803D;
   --color-gp-m: #22C55E;

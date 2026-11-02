@@ -81,7 +81,7 @@ export function AdminRewards() {
 
     const res = await toggleRewardActiveInSupabase(id, newActiveState);
     if (!res.success) {
-      triggerToast(`❌ อัปเดตไม่สำเร็จ: ${res.error || 'Permission error'}`);
+      triggerToast(`❌ ອັບເດດບໍ່ສຳເລັດ: ${res.error || 'Permission error'}`);
       return;
     }
 
@@ -93,22 +93,22 @@ export function AdminRewards() {
         return r;
       })
     );
-    triggerToast(`ของรางวัล "${target.nameEn}" เปลี่ยนเป็น ${newActiveState ? 'เปิดใช้งาน' : 'ปิดใช้งาน'} ใน Supabase แล้ว`);
+    triggerToast(`ລາງວັນ "${target.nameEn}" ຖືກ${newActiveState ? 'ເປີດໃຊ້ງານ' : 'ປິດໃຊ້ງານ'}ໃນ Supabase ແລ້ວ`);
   };
 
   const handleDeleteReward = async (reward: DbRewardItem) => {
-    if (!confirm(`คุณต้องการลบของรางวัล "${reward.nameEn}" ออกจากฐานข้อมูล Supabase ใช่หรือไม่?`)) {
+    if (!confirm(`ທ່ານຕ້ອງການລຶບລາງວັນ "${reward.nameEn}" ອອກຈາກ Supabase ຫຼືບໍ່?`)) {
       return;
     }
 
     const res = await deleteRewardInSupabase(reward.id);
     if (!res.success) {
-      triggerToast(`❌ ลบไม่สำเร็จ: ${res.error || 'Supabase delete failed'}`);
+      triggerToast(`❌ ລຶບບໍ່ສຳເລັດ: ${res.error || 'Supabase delete failed'}`);
       return;
     }
 
     setRewards((prev) => prev.filter((r) => r.id !== reward.id));
-    triggerToast(`🗑️ ลบของรางวัล "${reward.nameEn}" ออกจาก Supabase เรียบร้อยแล้ว`);
+    triggerToast(`🗑️ ລຶບລາງວັນ "${reward.nameEn}" ອອກຈາກ Supabase ແລ້ວ`);
   };
 
   const handleCreateReward = async (e: React.FormEvent) => {
@@ -136,7 +136,7 @@ export function AdminRewards() {
     if (!res.success) {
       console.error('Failed to insert reward into Supabase:', res.error);
       setModalError(res.error || 'Failed to insert into Supabase table.');
-      triggerToast(`❌ บันทึกลง Supabase ล้มเหลว: ${res.error}`);
+      triggerToast(`❌ ບັນທຶກໃນ Supabase ບໍ່ສຳເລັດ: ${res.error}`);
       return;
     }
 
@@ -145,7 +145,7 @@ export function AdminRewards() {
       setRewards((prev) => [res.data!, ...prev.filter((r) => r.id !== res.data!.id)]);
     }
 
-    triggerToast(`🎉 บันทึกของรางวัล "${newRewardNameEn.trim()}" ลงตาราง rewards ใน Supabase สำเร็จแล้ว!`);
+    triggerToast(`🎉 ບັນທຶກລາງວັນ "${newRewardNameEn.trim()}" ໃນ Supabase ສຳເລັດແລ້ວ!`);
     setAddModalOpen(false);
     setNewRewardNameEn('');
     setNewRewardNameTh('');
@@ -157,7 +157,7 @@ export function AdminRewards() {
   const handleClaimVoucher = async (logId: string) => {
     const success = await claimVoucherInSupabase(logId);
     if (!success) {
-      triggerToast('❌ ไม่สามารถตัดจ่ายคูปองใน Supabase ได้');
+      triggerToast('❌ ບໍ່ສາມາດຢືນຢັນການຮັບຄູປອງໃນ Supabase ໄດ້');
       return;
     }
 
@@ -545,11 +545,11 @@ export function AdminRewards() {
               <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
                 <div className="flex-1">
-                  <strong>เกิดข้อผิดพลาดจาก Supabase:</strong>
+                  <strong>Supabase ເກີດຂໍ້ຜິດພາດ:</strong>
                   <div className="mt-0.5 font-mono text-[11px]">{modalError}</div>
                   {modalError.includes('violates row-level security policy') && (
                     <div className="mt-1 text-red-800">
-                      💡 <strong>วิธีแก้:</strong> กรุณารันไฟล์ <code>supabase/fix_rewards_rls.sql</code> ใน Supabase SQL Editor เพื่อเปิดสิทธิ์การบันทึกของรางวัลครับ
+                      💡 <strong>ວິທີແກ້:</strong> ກະລຸນາລັນໄຟລ໌ <code>supabase/fix_rewards_rls.sql</code> ໃນ Supabase SQL Editor ເພື່ອເປີດສິດບັນທຶກລາງວັນ
                     </div>
                   )}
                 </div>
@@ -573,11 +573,11 @@ export function AdminRewards() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Thai Name
+                    Lao Name
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. แก้วน้ำรักษ์โลก"
+                    placeholder="ເຊັ່ນ ຈອກນ້ຳຮັກສາສິ່ງແວດລ້ອມ"
                     value={newRewardNameTh}
                     onChange={(e) => setNewRewardNameTh(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gp"

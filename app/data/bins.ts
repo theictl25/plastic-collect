@@ -17,9 +17,9 @@ export const WASTE_TYPE_COLORS: Record<WasteType, string> = {
   other: 'bg-gp-gray text-white',
 };
 
-export const WASTE_TYPE_NAMES: Record<WasteType, { th: string; en: string }> = {
-  plastic: { th: 'พลาสติก', en: 'Plastic' },
-  paper: { th: 'กระดาษ', en: 'Paper' },
-  metal: { th: 'โลหะ', en: 'Metal' },
-  other: { th: 'อื่นๆ', en: 'Other' },
+export const WASTE_TYPE_NAMES: Record<WasteType, { lo: string; en: string }> = {
+  plastic: { lo: 'ພລາສຕິກ', en: 'Plastic' },
+  paper: { lo: 'ເຈ້ຍ', en: 'Paper' },
+  metal: { lo: 'ໂລຫະ', en: 'Metal' },
+  other: { lo: 'ອື່ນໆ', en: 'Other' },
 };

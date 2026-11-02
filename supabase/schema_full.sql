@@ -566,10 +566,10 @@ grant execute on function public.admin_adjust_points(uuid, integer, text) to aut
 -- 7.1 Waste Types
 insert into public.waste_types (code, name_th, name_en, points_per_kg)
 values
-  ('plastic', 'พลาสติก (ขวด PET)', 'Plastic Bottle', 10),
-  ('paper', 'กระดาษและลัง', 'Paper & Carton', 8),
-  ('metal', 'โลหะและกระป๋องอลูมิเนียม', 'Metal & Can', 12),
-  ('other', 'ขยะรีไซเคิลอื่นๆ', 'Other Recyclables', 5)
+  ('plastic', 'ພລາສຕິກ (ຂວດ PET)', 'Plastic Bottle', 10),
+  ('paper', 'ເຈ້ຍ ແລະ ກ່ອງ', 'Paper & Carton', 8),
+  ('metal', 'ໂລຫະ ແລະ ກະປ໋ອງອາລູມິນຽມ', 'Metal & Can', 12),
+  ('other', 'ຂີ້ເຫຍື້ອຮີໄຊເຄິນອື່ນໆ', 'Other Recyclables', 5)
 on conflict (code) do update
 set name_th = excluded.name_th,
     name_en = excluded.name_en,
@@ -608,14 +608,14 @@ on conflict do nothing;
 -- 7.3 Rewards
 insert into public.rewards (name_th, name_en, category, points_cost, image_url, description, stock_quantity, is_active)
 values
-  ('ชุดอาหารกลางวัน', 'Lunch Set', 'food', 50, '🍱', 'Healthy nutritious lunch set coupon for cafeteria', 48, true),
-  ('เครื่องดื่มน้ำผลไม้', 'Fresh Fruit Drink', 'food', 30, '🥤', 'Refreshing fruit smoothie or juice at participating stalls', 92, true),
-  ('กระเป๋าผ้ารักษ์โลก', 'Eco Tote Bag', 'merch', 100, '👜', 'Durable Green Point organic canvas tote bag', 15, true),
-  ('กระบอกน้ำเก็บความเย็น', 'Insulated Water Bottle', 'merch', 80, '🧴', 'Stainless steel eco flask to reduce single-use plastic', 24, true),
-  ('เสื้อยืดกรีนพอยท์', 'Green Point T-Shirt', 'merch', 150, '👕', 'Eco cotton official campaign t-shirt', 20, true),
-  ('บัตรกำนัลร้านค้าพันธมิตร', 'Campus Partner Voucher', 'discount', 200, '🎟️', 'Special gift voucher for bookstores and campus cafes', 35, true),
-  ('ร่มพับรักษ์โลก', 'Eco Umbrella', 'merch', 120, '☂️', 'Compact umbrella made from recycled PET fabric', 18, true),
-  ('กล่องข้าวอาหารรักษ์โลก', 'Reusable Lunch Box', 'merch', 100, '🥡', 'BPA-free microwave safe food container', 25, true)
+  ('ຊຸດອາຫານທ່ຽງ', 'Lunch Set', 'food', 50, '🍱', 'Healthy nutritious lunch set coupon for cafeteria', 48, true),
+  ('ເຄື່ອງດື່ມນ້ຳໝາກໄມ້', 'Fresh Fruit Drink', 'food', 30, '🥤', 'Refreshing fruit smoothie or juice at participating stalls', 92, true),
+  ('ກະເປົາຜ້າຮັກສາສິ່ງແວດລ້ອມ', 'Eco Tote Bag', 'merch', 100, '👜', 'Durable Green Point organic canvas tote bag', 15, true),
+  ('ກະຕິກນ້ຳເກັບຄວາມເຢັນ', 'Insulated Water Bottle', 'merch', 80, '🧴', 'Stainless steel eco flask to reduce single-use plastic', 24, true),
+  ('ເສື້ອຍືດ Green Point', 'Green Point T-Shirt', 'merch', 150, '👕', 'Eco cotton official campaign t-shirt', 20, true),
+  ('ບັດກຳນັນຮ້ານຄ້າຄູ່ຮ່ວມງານ', 'Campus Partner Voucher', 'discount', 200, '🎟️', 'Special gift voucher for bookstores and campus cafes', 35, true),
+  ('ຮົ່ມພັບຮັກສາສິ່ງແວດລ້ອມ', 'Eco Umbrella', 'merch', 120, '☂️', 'Compact umbrella made from recycled PET fabric', 18, true),
+  ('ກ່ອງເຂົ້າໃຊ້ຊ້ຳໄດ້', 'Reusable Lunch Box', 'merch', 100, '🥡', 'BPA-free microwave safe food container', 25, true)
 on conflict do nothing;
 
 -- 7.4 System Settings Defaults
